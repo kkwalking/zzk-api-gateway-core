@@ -1,4 +1,4 @@
-package top.kelton.gateway.core;
+package top.kelton.gateway.session;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -7,7 +7,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetSocketAddress;
 import java.util.concurrent.Callable;
 
 /**
@@ -23,6 +22,12 @@ public class SessionServer implements Callable<Channel> {
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
     private Channel channel;
 
+    private final Configuration configuration;
+
+    public SessionServer(Configuration configuration) {
+        this.configuration = configuration;
+    }
+
     @Override
     public Channel call() throws Exception {
         ChannelFuture channelFuture = null;
@@ -31,7 +36,7 @@ public class SessionServer implements Callable<Channel> {
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 128)
-                    .childHandler(new ChannelSessionInitializer());
+                    .childHandler(new SessionChannelInitializer(configuration));
             channelFuture = bootstrap.bind(9999).syncUninterruptibly();
             this.channel = channelFuture.channel();
         } catch (Exception e) {

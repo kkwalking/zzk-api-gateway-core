@@ -4,6 +4,9 @@ import io.netty.channel.Channel;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import top.kelton.gateway.session.Configuration;
+import top.kelton.gateway.session.GenericReferenceSessionFactoryBuilder;
+import top.kelton.gateway.session.SessionServer;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -20,18 +23,12 @@ public class GatewayTest {
 
     @Test
     public void test() throws ExecutionException, InterruptedException {
-        SessionServer server = new SessionServer();
+        Configuration configuration = new Configuration();
+        configuration.addGenericReference("rpc-provider-01", "top.kelton.gateway.rpc.IUserService", "getUserInfo");
+        GenericReferenceSessionFactoryBuilder builder = new GenericReferenceSessionFactoryBuilder();
+        Future<Channel> channelFuture = builder.build(configuration);
 
-        Future<Channel> future = Executors.newFixedThreadPool(2).submit(server);
-        Channel channel = future.get();
-
-        if (null == channel) throw new RuntimeException("netty server start error: channel is null");
-
-        while (!channel.isActive()) {
-            logger.info("NettyServer启动服务 ...");
-            Thread.sleep(500);
-        }
-        logger.info("NettyServer启动服务完成 {}", channel.localAddress());
+        logger.info("启动服务完成 {}", channelFuture.get().id());
 
         Thread.sleep(Long.MAX_VALUE);
     }
